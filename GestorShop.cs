@@ -18,25 +18,23 @@ public class GestorShop : MonoBehaviour
     {
         public string nombre;
         public int precio;
-        public GameObject prefabObjeto; // Prefab para instanciar el objeto
+        public GameObject prefabObjeto;
         [HideInInspector] public int unidadesCompradas;
     }
 
     private void Start()
     {
         gestorEncargos = Object.FindFirstObjectByType<GestorEncargos>();
-        if (gestorEncargos == null)
+        if (gestorEncargos != null)
         {
-            Debug.LogError("GestorEncargos no encontrado.");
+            gestorEncargos.OnDineroCambiado += ActualizarTodosLosItems;
         }
 
-        // Cargar unidades compradas desde PlayerPrefs
         for (int i = 0; i < itemsTienda.Length; i++)
         {
             itemsTienda[i].unidadesCompradas = PlayerPrefs.GetInt($"Item_{i}_Compras", 0);
         }
 
-        // Configurar botones de la tienda
         for (int i = 0; i < botonesComprar.Length; i++)
         {
             int index = i;
@@ -53,9 +51,8 @@ public class GestorShop : MonoBehaviour
         int unidadesRestantes = 3 - item.unidadesCompradas;
 
         textosItems[index].text =
-            $"<b>{item.nombre}</b>\n" +
-            $"<color=#FFD700>Precio: ${item.precio}</color>\n" +
-            $"Comprados: {item.unidadesCompradas}/3";
+            $" <color=#04c735>{item.precio}$</color>\n" +
+            $"{item.unidadesCompradas}/3";
 
         botonesComprar[index].interactable = gestorEncargos != null &&
                                              ObtenerDinero() >= item.precio &&
@@ -64,7 +61,7 @@ public class GestorShop : MonoBehaviour
 
     private int ObtenerDinero()
     {
-        return PlayerPrefs.GetInt("Money", 0);
+        return PlayerPrefs.GetInt(PlayerPrefsKeys.Dinero, 0);
     }
 
     private void ComprarItem(int index)
@@ -77,18 +74,15 @@ public class GestorShop : MonoBehaviour
         if (dineroActual >= item.precio && item.unidadesCompradas < 3)
         {
             int nuevoDinero = dineroActual - item.precio;
-            PlayerPrefs.SetInt("Money", nuevoDinero);
+            PlayerPrefs.SetInt(PlayerPrefsKeys.Dinero, nuevoDinero);
 
             item.unidadesCompradas++;
             PlayerPrefs.SetInt($"Item_{index}_Compras", item.unidadesCompradas);
 
-            // Añadir al inventario
             Inventario.Instancia?.AñadirObjeto(item.nombre, item.precio, 1, item.prefabObjeto, index);
 
-            // Actualizar UI del dinero
             gestorEncargos?.ActualizarDinero();
 
-            // Actualizar todos los textos de la tienda
             for (int i = 0; i < botonesComprar.Length; i++)
             {
                 ActualizarTextoItem(i);
@@ -102,13 +96,12 @@ public class GestorShop : MonoBehaviour
         }
     }
 
-    public ItemTienda ObtenerItemTienda(int index)
+    private void ActualizarTodosLosItems(int nuevoDinero)
     {
-        if (index >= 0 && index < itemsTienda.Length)
+        for (int i = 0; i < botonesComprar.Length; i++)
         {
-            return itemsTienda[index];
+            ActualizarTextoItem(i);
         }
-        return null;
     }
 
     private void OnDestroy()
@@ -117,5 +110,19 @@ public class GestorShop : MonoBehaviour
         {
             botonesComprar[i].onClick.RemoveAllListeners();
         }
+
+        if (gestorEncargos != null)
+        {
+            gestorEncargos.OnDineroCambiado -= ActualizarTodosLosItems;
+        }
+    }
+
+    public ItemTienda ObtenerItemTienda(int index)
+    {
+        if (index >= 0 && index < itemsTienda.Length)
+        {
+            return itemsTienda[index];
+        }
+        return null;
     }
 }

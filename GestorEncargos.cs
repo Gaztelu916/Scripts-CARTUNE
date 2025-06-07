@@ -5,6 +5,11 @@ using System.Collections;
 
 public class GestorEncargos : MonoBehaviour
 {
+    public static GestorEncargos Instancia;
+
+    public delegate void DineroCambiadoHandler(int nuevoDinero);
+    public event DineroCambiadoHandler OnDineroCambiado;
+
     [Header("Referencias UI")]
     public TMP_Text dineroTexto;
     public TMP_Text reputacionTexto;
@@ -35,12 +40,17 @@ public class GestorEncargos : MonoBehaviour
         public float duracion;
     }
 
+    private void Awake()
+    {
+        Instancia = this;
+    }
+
     private void Start()
     {
         gestorQuests = FindObjectOfType<GestorQuests>();
 
-        dinero = PlayerPrefs.GetInt("Money :", dineroInicial);
-        reputacion = PlayerPrefs.GetInt("REP :", reputacionInicial);
+        dinero = PlayerPrefs.GetInt(PlayerPrefsKeys.Dinero, dineroInicial);
+        reputacion = PlayerPrefs.GetInt(PlayerPrefsKeys.Reputacion, reputacionInicial);
 
         for (int i = 0; i < encargos.Length; i++)
         {
@@ -123,9 +133,11 @@ public class GestorEncargos : MonoBehaviour
         dinero += encargo.recompensaDinero;
         reputacion += encargo.recompensaReputacion;
 
-        PlayerPrefs.SetInt("Money :", dinero);
-        PlayerPrefs.SetInt("REP :", reputacion);
+        PlayerPrefs.SetInt(PlayerPrefsKeys.Dinero, dinero);
+        PlayerPrefs.SetInt(PlayerPrefsKeys.Reputacion, reputacion);
         PlayerPrefs.Save();
+
+        OnDineroCambiado?.Invoke(dinero);
 
         gestorQuests?.NotificarEncargoCompletado(encargo.modelo, encargo.esReparacion);
 
@@ -147,15 +159,15 @@ public class GestorEncargos : MonoBehaviour
     public void GanarReputacion(int cantidad)
     {
         reputacion += cantidad;
-        PlayerPrefs.SetInt("REP :", reputacion);
+        PlayerPrefs.SetInt(PlayerPrefsKeys.Reputacion, reputacion);
         PlayerPrefs.Save();
         ActualizarUI();
     }
 
-    // ✅ NUEVO método para refrescar dinero desde otro script
     public void ActualizarDinero()
     {
-        dinero = PlayerPrefs.GetInt("Money :", 0);
+        dinero = PlayerPrefs.GetInt(PlayerPrefsKeys.Dinero, 0);
         dineroTexto.text = $"Money: <color=#00FF00>${dinero}</color>";
+        OnDineroCambiado?.Invoke(dinero);
     }
 }

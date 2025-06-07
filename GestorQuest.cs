@@ -3,12 +3,13 @@ using TMPro;
 
 public class GestorQuests : MonoBehaviour
 {
+    [Header("Referencias UI")]
     public TMP_Text[] textosQuests;
     public string[] modelosCoches;
     public int reputacionPorDefecto = 1;
 
     private Quest[] quests = new Quest[3];
-    private GestorEncargos gestorEncargos; // Referencia al gestor para sumar reputación
+    private GestorEncargos gestorEncargos;
 
     private void Start()
     {
@@ -44,7 +45,8 @@ public class GestorQuests : MonoBehaviour
 
             if (quests[i].EstaCompletada)
             {
-                gestorEncargos.GanarReputacion(quests[i].recompensaReputacion);
+                // Otorgar recompensa al completar una quest
+                gestorEncargos?.GanarReputacion(quests[i].recompensaReputacion);
                 quests[i] = GenerarQuestAleatoria();
             }
         }
@@ -56,7 +58,8 @@ public class GestorQuests : MonoBehaviour
     {
         for (int i = 0; i < textosQuests.Length; i++)
         {
-            textosQuests[i].text = quests[i].ObtenerTexto();
+            if (quests[i] != null)
+                textosQuests[i].text = quests[i].ObtenerTexto();
         }
     }
 }

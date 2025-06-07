@@ -12,7 +12,7 @@ public class Inventario : MonoBehaviour
         public int precio;
         public int cantidad;
         public GameObject prefabObjeto;
-        public int indiceTienda; // Vinculación con el ítem de la tienda
+        public int indiceTienda;
 
         public ObjetoInventario(string nombre, int precio, int cantidad, GameObject prefabObjeto, int indiceTienda)
         {
@@ -45,7 +45,6 @@ public class Inventario : MonoBehaviour
 
     public void AñadirObjeto(string nombre, int precio, int cantidad, GameObject prefabObjeto, int indiceTienda)
     {
-        // Buscar si el objeto ya existe en el inventario
         ObjetoInventario objetoExistente = objetos.Find(obj => obj.indiceTienda == indiceTienda);
         if (objetoExistente != null)
         {
@@ -57,7 +56,7 @@ public class Inventario : MonoBehaviour
         }
 
         GuardarInventario();
-        OnInventarioCambiado?.Invoke();
+        NotificarCambioInventario(); // Usar método para invocar el evento
     }
 
     public List<ObjetoInventario> ObtenerObjetos()
@@ -72,7 +71,7 @@ public class Inventario : MonoBehaviour
             Instantiate(objeto.prefabObjeto, Vector3.zero, Quaternion.identity);
             objeto.cantidad--;
             GuardarInventario();
-            OnInventarioCambiado?.Invoke();
+            NotificarCambioInventario(); // Usar método para invocar el evento
             Debug.Log($"Instanciado {objeto.nombre}. Cantidad restante: {objeto.cantidad}");
         }
         else
@@ -81,7 +80,8 @@ public class Inventario : MonoBehaviour
         }
     }
 
-    private void GuardarInventario()
+    // Cambiado de private a public
+    public void GuardarInventario()
     {
         PlayerPrefs.SetInt("Inventario_Cantidad", objetos.Count);
 
@@ -91,7 +91,6 @@ public class Inventario : MonoBehaviour
             PlayerPrefs.SetInt($"Inventario_{i}_Precio", objetos[i].precio);
             PlayerPrefs.SetInt($"Inventario_{i}_Cantidad", objetos[i].cantidad);
             PlayerPrefs.SetInt($"Inventario_{i}_IndiceTienda", objetos[i].indiceTienda);
-            // Nota: No guardamos el prefab directamente, usamos el indiceTienda para vincular
         }
 
         PlayerPrefs.Save();
@@ -124,7 +123,12 @@ public class Inventario : MonoBehaviour
         Debug.Log($"Inventario cargado con {objetos.Count} objetos.");
     }
 
-    // Opcional: Método para pruebas
+    // Nuevo método para invocar el evento
+    public void NotificarCambioInventario()
+    {
+        OnInventarioCambiado?.Invoke();
+    }
+
     public void LimpiarInventario()
     {
         objetos.Clear();
@@ -137,7 +141,7 @@ public class Inventario : MonoBehaviour
             PlayerPrefs.DeleteKey($"Inventario_{i}_IndiceTienda");
         }
         PlayerPrefs.Save();
-        OnInventarioCambiado?.Invoke();
+        NotificarCambioInventario();
         Debug.Log("Inventario limpiado.");
     }
 }
