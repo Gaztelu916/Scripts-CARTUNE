@@ -7,6 +7,7 @@ public class UIInventario : MonoBehaviour
 {
     public GameObject contenedorContenido; // ScrollView/Viewport/Content
     public GameObject prefabBotonInventario;
+    public GameObject panelInventario; // Referencia al panel de inventario que quieres cerrar
 
     private void OnDisable()
     {
@@ -50,8 +51,21 @@ public class UIInventario : MonoBehaviour
                 textoCantidad.text = $"{objeto.cantidad}/3";
             }
 
-            // Añadir funcionalidad de clic para iniciar colocación
-            nuevoBoton.GetComponent<Button>().onClick.AddListener(() => PlacerObjetos.Instancia.IniciarColocacion(objeto));
+            // Añadir funcionalidad de clic
+            Button boton = nuevoBoton.GetComponent<Button>();
+            boton.onClick.AddListener(() => {
+                PlacerObjetos.Instancia.IniciarColocacion(objeto);
+                CerrarPanelInventario();
+            });
+        }
+    }
+
+    // Método para cerrar el panel de inventario
+    public void CerrarPanelInventario()
+    {
+        if (panelInventario != null)
+        {
+            panelInventario.SetActive(false);
         }
     }
 }
